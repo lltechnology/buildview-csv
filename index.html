@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buildview - Product Search</title>
+    <title>Buildview - Stock Lookup</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .nav { margin-bottom: 2rem; }
@@ -20,11 +20,11 @@
         <strong>Buildview</strong> | <a href="index.html">Search</a> | <a href="upload.html">Admin Upload</a>
     </div>
 
-    <h1>Product Lookup</h1>
-    <p>Enter a Product Code to see specifications.</p>
+    <h1>Stock Spec Lookup</h1>
+    <p>Enter a Stock Number to see specifications.</p>
 
     <div>
-        <input type="text" id="searchInput" placeholder="e.g., 183168">
+        <input type="text" id="searchInput" placeholder="e.g., S500">
         <button onclick="searchProduct()">Search</button>
     </div>
 
@@ -32,11 +32,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
-        // CONFIGURATION: Change this to your CSV path
-        // If the file is in the same folder, just use 'data.csv'
         const CSV_URL = 'data.csv'; 
 
         function searchProduct() {
+            // Get input and clean it up
             const code = document.getElementById('searchInput').value.trim().toLowerCase();
             const resultArea = document.getElementById('resultArea');
             resultArea.innerHTML = "Loading...";
@@ -44,21 +43,24 @@
             Papa.parse(CSV_URL, {
                 download: true,
                 header: true,
+                skipEmptyLines: true, // Good practice to avoid empty row errors
                 complete: function(results) {
                     const data = results.data;
-                    // Filter the data looking for the code
-                    const product = data.find(row => row.ProductCode && row.ProductCode.toLowerCase() === code);
+                    
+                    // --- CHANGED HERE: Look for StockNumber ---
+                    const product = data.find(row => 
+                        row.StockNumber && row.StockNumber.toLowerCase() === code
+                    );
 
                     if (product) {
-                        // Build a table to show the result
-                        let html = `<h3>Details for ${product.ProductCode}</h3><table>`;
+                        let html = `<h3>Details for Stock #${product.StockNumber}</h3><table>`;
                         for (const [key, value] of Object.entries(product)) {
                             html += `<tr><th>${key}</th><td>${value}</td></tr>`;
                         }
                         html += `</table>`;
                         resultArea.innerHTML = html;
                     } else {
-                        resultArea.innerHTML = `<p class="error">Product code "${code}" not found.</p>`;
+                        resultArea.innerHTML = `<p class="error">Stock Number "${code}" not found.</p>`;
                     }
                 },
                 error: function(err) {
@@ -68,5 +70,4 @@
         }
     </script>
 </body>
-
 </html>
