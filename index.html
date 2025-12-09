@@ -10,7 +10,7 @@
         input, button { padding: 10px; font-size: 1rem; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f4f4f4; }
+        th { background-color: #f4f4f4; width: 30%; }
         .error { color: red; }
     </style>
 </head>
@@ -35,28 +35,42 @@
         const CSV_URL = 'data.csv'; 
 
         function searchProduct() {
-            // Get input and clean it up
             const code = document.getElementById('searchInput').value.trim().toLowerCase();
             const resultArea = document.getElementById('resultArea');
             resultArea.innerHTML = "Loading...";
 
             Papa.parse(CSV_URL, {
                 download: true,
-                header: true,
-                skipEmptyLines: true, // Good practice to avoid empty row errors
+                header: false, // CHANGED: We now read as a simple list of lists, ignoring header names
+                skipEmptyLines: true,
                 complete: function(results) {
-                    const data = results.data;
-                    
-                    // --- CHANGED HERE: Look for StockNumber ---
-                    const product = data.find(row => 
-                        row.StockNumber && row.StockNumber.toLowerCase() === code
+                    const rawData = results.data;
+
+                    if (!rawData || rawData.length < 2) {
+                        resultArea.innerHTML = "<p class='error'>Database is empty or invalid.</p>";
+                        return;
+                    }
+
+                    // Row 0 contains the labels (Header Name, Price, etc.)
+                    const headers = rawData[0];
+                    // The rest of the rows contain the actual products
+                    const rows = rawData.slice(1);
+
+                    // SEARCH LOGIC: Look at column index 0 (the first column)
+                    const productRow = rows.find(row => 
+                        row[0] && row[0].toString().toLowerCase() === code
                     );
 
-                    if (product) {
-                        let html = `<h3>Details for Stock #${product.StockNumber}</h3><table>`;
-                        for (const [key, value] of Object.entries(product)) {
-                            html += `<tr><th>${key}</th><td>${value}</td></tr>`;
-                        }
+                    if (productRow) {
+                        let html = `<h3>Details for ${productRow[0]}</h3><table>`;
+                        
+                        // Loop through the columns to build the table
+                        headers.forEach((headerName, index) => {
+                            // Ensure we don't crash if a row is shorter than the header
+                            const value = productRow[index] || ""; 
+                            html += `<tr><th>${headerName}</th><td>${value}</td></tr>`;
+                        });
+
                         html += `</table>`;
                         resultArea.innerHTML = html;
                     } else {
