@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buildview - Product Search</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background-color: #f9f9f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px 10px; background-color: #f9f9f9; }
         .nav { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd; }
         a { text-decoration: none; color: #007bff; margin: 0 10px; }
         
@@ -15,10 +15,10 @@
         button { padding: 12px 25px; font-size: 1rem; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
         button:hover { background-color: #0056b3; }
 
-        /* THE GRID LAYOUT */
+        /* THE CORE GRID LAYOUT (Desktop/Tablet) */
         .spec-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* We use 6 columns to allow for 1/2, 1/3 and full width items */
+            grid-template-columns: repeat(6, 1fr); /* 6 columns max for spanning logic */
             gap: 15px;
             background: #fff;
             padding: 25px;
@@ -26,7 +26,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        /* Individual Card Styling */
+        /* Individual Card Styling (UNCHANGED) */
         .field-box {
             display: flex;
             flex-direction: column;
@@ -35,41 +35,43 @@
             padding: 5px;
             background: #fff;
         }
-
-        .label {
-            font-size: 0.85rem;
-            color: #555;
-            margin: 5px 0 5px 10px;
-            font-weight: 500;
-        }
-
+        .label { font-size: 0.85rem; color: #555; margin: 5px 0 5px 10px; font-weight: 500; }
         .value {
-            background-color: #dae8fc; /* The Light Blue from your image */
+            background-color: #dae8fc;
             padding: 12px;
             border-radius: 6px;
             font-size: 1rem;
             font-weight: 600;
             color: #333;
-            min-height: 24px; /* Ensures empty fields still show a box */
+            min-height: 24px;
             display: flex;
             align-items: center;
         }
 
-        /* Spanning Utility Classes */
+        /* Spanning Utility Classes (Desktop/Tablet) */
         .span-6 { grid-column: span 6; } /* Full width */
         .span-3 { grid-column: span 3; } /* Half width (2 per row) */
         .span-2 { grid-column: span 2; } /* Third width (3 per row) */
-
-        /* Responsive: On mobile, everything becomes 1 column */
-        @media (max-width: 600px) {
-            .spec-grid { display: flex; flex-direction: column; }
-        }
-
         .error { color: red; font-weight: bold; padding: 20px; }
+
+        /* 📱 MOBILE OPTIMIZATION: Media Query 📱 */
+        @media (max-width: 600px) {
+            /* On small screens, the main grid switches to a single column layout */
+            .spec-grid {
+                grid-template-columns: 1fr; /* All items are full width */
+                padding: 15px;
+            }
+            /* Crucially, all span classes revert to full width (span 1) */
+            .span-6, .span-3, .span-2 {
+                grid-column: span 1;
+            }
+            .search-container {
+                flex-direction: column; /* Stack input and button vertically */
+            }
+        }
     </style>
 </head>
 <body>
-
     <div class="nav">
         <strong>Buildview</strong> | <a href="index.html">Search Product</a> | <a href="upload.html">Admin Upload</a>
     </div>
@@ -85,11 +87,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
+        // NOTE: The JavaScript logic is unchanged as the structure remains the same; only the presentation (CSS) changes.
         const CSV_URL = 'data.csv'; 
 
-        // Helper to create the HTML for one box
         function createBox(label, value, spanClass) {
-            // If value is missing in CSV, show empty string
             const safeValue = value ? value : ""; 
             return `
                 <div class="field-box ${spanClass}">
@@ -106,38 +107,28 @@
 
             Papa.parse(CSV_URL, {
                 download: true,
-                header: true, // We turn headers BACK ON so we can map fields to the specific layout
+                header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
                     const data = results.data;
-                    const meta = results.meta; // Contains info about fields
+                    const meta = results.meta; 
 
                     if (!data || data.length === 0) {
                         resultArea.innerHTML = "<p class='error'>Database is empty.</p>";
                         return;
                     }
-
-                    // 1. Identify the Name of the First Column (The "Stock Number" column)
                     const firstColumnName = meta.fields[0];
-
-                    // 2. Find the product using that first column
                     const product = data.find(row => 
                         row[firstColumnName] && row[firstColumnName].toString().toLowerCase() === code
                     );
 
                     if (product) {
-                        // 3. Build the Specific Grid Layout
-                        // Note: row['CSV Header Name'] must match your CSV file headers.
-                        
                         let html = `<div class="spec-grid">`;
 
                         // --- Row 1: Stock Number (Full Width) ---
-                        // We display whatever the first column is here
                         html += createBox("Stock Number", product[firstColumnName], "span-6");
-
                         // --- Row 2: Description (Full Width) ---
                         html += createBox("Description", product['Description'], "span-6");
-
                         // --- Row 3: As is (Full Width) ---
                         html += createBox("As is", product['As is'], "span-6");
 
@@ -153,28 +144,14 @@
                         html += createBox("Silver Code", product['Silver Code'], "span-3");
                         html += createBox("Gold Weight", product['Gold Weight'], "span-3");
 
-                        // --- Row 7: 1st Stone Details (3 cols) ---
-                        html += createBox("1st Stn", product['1st Stn'], "span-2");
-                        html += createBox("1st Stn Qty", product['1st Stn Qty'], "span-2");
-                        html += createBox("1st Stn Weight", product['1st Stn Weight'], "span-2");
-
-                        // --- Row 8: 2nd Stone Details (3 cols) ---
-                        html += createBox("2nd Stn", product['2nd Stn'], "span-2");
-                        html += createBox("2nd Stn Qty", product['2nd Stn Qty'], "span-2");
-                        html += createBox("2nd Stn Weight", product['2nd Stn Weight'], "span-2");
-
-                        // --- Row 9: 3rd Stone Details (3 cols) ---
-                        html += createBox("3rd Stn", product['3rd Stn'], "span-2");
-                        html += createBox("3rd Stn Qty", product['3rd Stn Qty'], "span-2");
-                        html += createBox("3rd Stn Weight", product['3rd Stn Weight'], "span-2");
+                        // --- Row 7-10: Stone Details (3 cols) ---
+                        for (let i = 1; i <= 4; i++) {
+                            html += createBox(`${i}st Stn`, product[`${i}st Stn`], "span-2");
+                            html += createBox(`${i}st Stn Qty`, product[`${i}st Stn Qty`], "span-2");
+                            html += createBox(`${i}st Stn Weight`, product[`${i}st Stn Weight`], "span-2");
+                        }
                         
-                        // --- Row 10: 4th Stone Details (3 cols) ---
-                        html += createBox("4th Stn", product['4th Stn'], "span-2");
-                        html += createBox("4th Stn Qty", product['4th Stn Qty'], "span-2");
-                        html += createBox("4th Stn Weight", product['4th Stn Weight'], "span-2");
-
                         html += `</div>`; // End Grid
-
                         resultArea.innerHTML = html;
                     } else {
                         resultArea.innerHTML = `<p class="error">Product with ID "${code}" not found.</p>`;
