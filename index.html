@@ -15,6 +15,14 @@
         button { padding: 12px 25px; font-size: 1rem; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
         button:hover { background-color: #0056b3; }
 
+        /* Last Modified Date Styling */
+        #lastModified {
+            font-size: 0.75rem; /* Small tiny font */
+            color: #777;
+            margin-top: -10px; /* Pull it closer to the h1 */
+            margin-bottom: 20px;
+        }
+
         /* THE GRID LAYOUT */
         .spec-grid {
             display: grid;
@@ -151,27 +159,27 @@
 
                         // --- Row 6: Silver & Weight (2 cols) ---
                         html += createBox("Silver Code", product['Silver Code'], "span-3");
-                        html += createBox("Gold Weight", product['Gold Weight'], "span-3");
+                        html += createBox("Gold Weight", product['Gold weight'], "span-3");
 
                         // --- Row 7: 1st Stone Details (3 cols) ---
                         html += createBox("1st Stn", product['1st Stn'], "span-2");
-                        html += createBox("1st Stn Qty", product['1st Stn Qty'], "span-2");
-                        html += createBox("1st Stn Weight", product['1st Stn Weight'], "span-2");
+                        html += createBox("1st Stn Qty", product['1st Stn qty'], "span-2");
+                        html += createBox("1st Stn Weight", product['1st Stn weight'], "span-2");
 
                         // --- Row 8: 2nd Stone Details (3 cols) ---
                         html += createBox("2nd Stn", product['2nd Stn'], "span-2");
-                        html += createBox("2nd Stn Qty", product['2nd Stn Qty'], "span-2");
-                        html += createBox("2nd Stn Weight", product['2nd Stn Weight'], "span-2");
+                        html += createBox("2nd Stn Qty", product['2nd Stn qty'], "span-2");
+                        html += createBox("2nd Stn Weight", product['2nd Stn weight'], "span-2");
 
                         // --- Row 9: 3rd Stone Details (3 cols) ---
                         html += createBox("3rd Stn", product['3rd Stn'], "span-2");
-                        html += createBox("3rd Stn Qty", product['3rd Stn Qty'], "span-2");
-                        html += createBox("3rd Stn Weight", product['3rd Stn Weight'], "span-2");
+                        html += createBox("3rd Stn Qty", product['3rd Stn qty'], "span-2");
+                        html += createBox("3rd Stn Weight", product['3rd Stn weight'], "span-2");
                         
                         // --- Row 10: 4th Stone Details (3 cols) ---
                         html += createBox("4th Stn", product['4th Stn'], "span-2");
-                        html += createBox("4th Stn Qty", product['4th Stn Qty'], "span-2");
-                        html += createBox("4th Stn Weight", product['4th Stn Weight'], "span-2");
+                        html += createBox("4th Stn Qty", product['4th Stn qty'], "span-2");
+                        html += createBox("4th Stn Weight", product['4th Stn weight'], "span-2");
 
                         html += `</div>`; // End Grid
 
