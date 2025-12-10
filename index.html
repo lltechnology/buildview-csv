@@ -7,13 +7,40 @@
     <style>
         /* Base Styling */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px 10px; background-color: #f9f9f9; }
-        .nav { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd; }
+        
+        /* Navigation Bar Styling */
+        .nav { 
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #ddd; 
+        }
         a { text-decoration: none; color: #007bff; margin: 0 10px; }
         
+        /* H1 Title Styling */
+        h1 { 
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
         /* Search Bar Styling (5px gap maintained) */
-        .search-container { margin-bottom: 30px; display: flex; gap: 5px; } 
+        .search-container { 
+            display: flex; 
+            gap: 5px; 
+            margin-bottom: 15px; 
+        } 
         input { padding: 12px; font-size: 1.1rem; border: 1px solid #ccc; border-radius: 6px; flex-grow: 1; }
-        button { padding: 12px 25px; font-size: 1rem; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        
+        /* Button Style Adjustments for the Icon */
+        button { 
+            padding: 11px 18px; /* Adjusted padding */
+            font-size: 1.3rem; /* Increased size for bolder icon */
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            line-height: 1; 
+        }
         button:hover { background-color: #0056b3; }
 
 
@@ -21,9 +48,9 @@
         .spec-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr); /* 6 columns max for spanning logic */
-            gap: 5px; /* Minimal gap between boxes */
+            gap: 0px; /* Zero gap between boxes */
             background: #fff;
-            padding: 25px;
+            padding: 0px; /* Zero padding inside the container */
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
@@ -34,23 +61,23 @@
             flex-direction: column; 
             border: 1px solid #eee; 
             border-radius: 8px; 
-            padding: 2px; /* REDUCED padding */
+            padding: 2px;
             background: #fff; 
         }
         .label { 
             font-size: 0.85rem; 
             color: #555; 
-            margin: 2px 0 2px 10px; /* REDUCED top/bottom margin */
+            margin: 2px 0 2px 10px;
             font-weight: 500; 
         }
         .value { 
             background-color: #dae8fc; 
-            padding: 8px; /* REDUCED vertical padding */
+            padding: 8px; 
             border-radius: 6px;
             font-size: 1rem;
             font-weight: 600;
             color: #333;
-            min-height: 20px; /* Adjusted slightly */
+            min-height: 20px; 
             display: flex;
             align-items: center;
         }
@@ -74,14 +101,14 @@
 </head>
 <body>
     <div class="nav">
-        <strong>Buildview</strong> | <a href="index.html">Search Product</a> | <a href="upload.html">Admin Upload</a>
+        <strong>Buildview</strong> | <a href="index.html">Search</a> | <a href="upload.html">Upload</a>
     </div>
 
     <h1>Product Search</h1>
     
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Enter Stock Number...">
-        <button onclick="searchProduct()">Search</button>
+        <button onclick="searchProduct()">🔍</button>
     </div>
 
     <div id="resultArea"></div>
@@ -152,12 +179,10 @@
                         html += createBox("10K Code", product['10K Code'], "span-3");
                         html += createBox("9K Code", product['9K Code'], "span-3");
                         html += createBox("Silver Code", product['Silver Code'], "span-3");
-                        
-                        // Using user's case 'Gold weight'
                         html += createBox("Gold Weight", product['Gold weight'], "span-3"); 
 
 
-                        // --- ROWS 7-10: Stone Details (3 cols, using user's specified case) ---
+                        // --- ROWS 7-10: Stone Details (3 cols) ---
                         
                         // Row 7: 1st Stone Details
                         html += createBox("1st Stn", product['1st Stn'], "span-2");
