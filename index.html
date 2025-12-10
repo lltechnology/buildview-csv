@@ -5,79 +5,74 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buildview - Product Search</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background-color: #f9f9f9; }
+        /* Base Styling */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px 10px; background-color: #f9f9f9; }
         .nav { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #ddd; }
         a { text-decoration: none; color: #007bff; margin: 0 10px; }
         
-        /* Search Bar Styling */
-        .search-container { margin-bottom: 30px; display: flex; gap: 10px; }
+        /* Search Bar Styling (5px gap maintained) */
+        .search-container { margin-bottom: 30px; display: flex; gap: 5px; } 
         input { padding: 12px; font-size: 1.1rem; border: 1px solid #ccc; border-radius: 6px; flex-grow: 1; }
         button { padding: 12px 25px; font-size: 1rem; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; }
         button:hover { background-color: #0056b3; }
 
-        /* Last Modified Date Styling */
-        #lastModified {
-            font-size: 0.75rem; /* Small tiny font */
-            color: #777;
-            margin-top: -10px; /* Pull it closer to the h1 */
-            margin-bottom: 20px;
-        }
 
-        /* THE GRID LAYOUT */
+        /* THE CORE GRID LAYOUT (Desktop/Tablet) */
         .spec-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* We use 6 columns to allow for 1/2, 1/3 and full width items */
-            gap: 15px;
+            grid-template-columns: repeat(6, 1fr); /* 6 columns max for spanning logic */
+            gap: 5px; /* Minimal gap between boxes */
             background: #fff;
             padding: 25px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        /* Individual Card Styling */
-        .field-box {
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            padding: 5px;
-            background: #fff;
+        /* Individual Card Styling - REDUCED INTERNAL SPACING */
+        .field-box { 
+            display: flex; 
+            flex-direction: column; 
+            border: 1px solid #eee; 
+            border-radius: 8px; 
+            padding: 2px; /* REDUCED padding */
+            background: #fff; 
         }
-
-        .label {
-            font-size: 0.85rem;
-            color: #555;
-            margin: 5px 0 5px 10px;
-            font-weight: 500;
+        .label { 
+            font-size: 0.85rem; 
+            color: #555; 
+            margin: 2px 0 2px 10px; /* REDUCED top/bottom margin */
+            font-weight: 500; 
         }
-
-        .value {
-            background-color: #dae8fc; /* The Light Blue from your image */
-            padding: 12px;
+        .value { 
+            background-color: #dae8fc; 
+            padding: 8px; /* REDUCED vertical padding */
             border-radius: 6px;
             font-size: 1rem;
             font-weight: 600;
             color: #333;
-            min-height: 24px; /* Ensures empty fields still show a box */
+            min-height: 20px; /* Adjusted slightly */
             display: flex;
             align-items: center;
         }
 
-        /* Spanning Utility Classes */
-        .span-6 { grid-column: span 6; } /* Full width */
-        .span-3 { grid-column: span 3; } /* Half width (2 per row) */
-        .span-2 { grid-column: span 2; } /* Third width (3 per row) */
-
-        /* Responsive: On mobile, everything becomes 1 column */
-        @media (max-width: 300px) {
-            .spec-grid { display: flex; flex-direction: column; }
-        }
-
+        /* Spanning Utility Classes (Desktop/Tablet) */
+        .span-6 { grid-column: span 6; }
+        .span-3 { grid-column: span 3; }
+        .span-2 { grid-column: span 2; }
         .error { color: red; font-weight: bold; padding: 20px; }
+
+        /* 📱 MOBILE OPTIMIZATION: Media Query 📱 */
+        @media (max-width: 300px) {
+            .search-container { 
+                flex-direction: column;
+                gap: 10px;
+            } 
+            .spec-grid { grid-template-columns: 1fr; padding: 15px; }
+            .span-6, .span-3, .span-2 { grid-column: span 1; }
+        }
     </style>
 </head>
 <body>
-
     <div class="nav">
         <strong>Buildview</strong> | <a href="index.html">Search Product</a> | <a href="upload.html">Admin Upload</a>
     </div>
@@ -93,11 +88,20 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
-        const CSV_URL = 'data.csv'; 
+        const CSV_URL = 'data.csv';
+        const searchInput = document.getElementById('searchInput');
 
-        // Helper to create the HTML for one box
+        // --- Event Listener for the Enter Key ---
+        searchInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                searchProduct();
+            }
+        });
+        // ----------------------------------------
+
+        // Helper to create the HTML for one detail box
         function createBox(label, value, spanClass) {
-            // If value is missing in CSV, show empty string
             const safeValue = value ? value : ""; 
             return `
                 <div class="field-box ${spanClass}">
@@ -106,83 +110,76 @@
                 </div>
             `;
         }
-
+        
+        // --- Main Search Function ---
         function searchProduct() {
-            const code = document.getElementById('searchInput').value.trim().toLowerCase();
+            const code = searchInput.value.trim().toLowerCase();
             const resultArea = document.getElementById('resultArea');
-            resultArea.innerHTML = "<p>Loading...</p>";
+            resultArea.innerHTML = "<p>Searching...</p>";
 
             Papa.parse(CSV_URL, {
                 download: true,
-                header: true, // We turn headers BACK ON so we can map fields to the specific layout
+                header: true, // Read with headers so we can map fields by name
                 skipEmptyLines: true,
                 complete: function(results) {
                     const data = results.data;
-                    const meta = results.meta; // Contains info about fields
+                    const meta = results.meta; 
 
                     if (!data || data.length === 0) {
                         resultArea.innerHTML = "<p class='error'>Database is empty.</p>";
                         return;
                     }
 
-                    // 1. Identify the Name of the First Column (The "Stock Number" column)
+                    // Get the name of the first column for robust searching
                     const firstColumnName = meta.fields[0];
-
-                    // 2. Find the product using that first column
                     const product = data.find(row => 
                         row[firstColumnName] && row[firstColumnName].toString().toLowerCase() === code
                     );
 
                     if (product) {
-                        // 3. Build the Specific Grid Layout
-                        // Note: row['CSV Header Name'] must match your CSV file headers.
-                        
                         let html = `<div class="spec-grid">`;
 
-                        // --- Row 1: Stock Number (Full Width) ---
-                        // We display whatever the first column is here
+                        // Row 1: Stock Number (Full Width)
                         html += createBox("Stock Number", product[firstColumnName], "span-6");
-
-                        // --- Row 2: Description (Full Width) ---
+                        // Row 2: Description (Full Width)
                         html += createBox("Description", product['Description'], "span-6");
-
-                        // --- Row 3: As is (Full Width) ---
+                        // Row 3: As is (Full Width)
                         html += createBox("As is", product['As is'], "span-6");
 
-                        // --- Row 4: Gold Codes (2 cols) ---
+                        // Row 4-6: Gold and Weight Details (2 cols)
                         html += createBox("18K Code", product['18K Code'], "span-3");
                         html += createBox("14K Code", product['14K Code'], "span-3");
-
-                        // --- Row 5: Gold Codes (2 cols) ---
                         html += createBox("10K Code", product['10K Code'], "span-3");
                         html += createBox("9K Code", product['9K Code'], "span-3");
-
-                        // --- Row 6: Silver & Weight (2 cols) ---
                         html += createBox("Silver Code", product['Silver Code'], "span-3");
-                        html += createBox("Gold Weight", product['Gold weight'], "span-3");
+                        
+                        // Using user's case 'Gold weight'
+                        html += createBox("Gold Weight", product['Gold weight'], "span-3"); 
 
-                        // --- Row 7: 1st Stone Details (3 cols) ---
+
+                        // --- ROWS 7-10: Stone Details (3 cols, using user's specified case) ---
+                        
+                        // Row 7: 1st Stone Details
                         html += createBox("1st Stn", product['1st Stn'], "span-2");
                         html += createBox("1st Stn Qty", product['1st Stn qty'], "span-2");
                         html += createBox("1st Stn Weight", product['1st Stn weight'], "span-2");
 
-                        // --- Row 8: 2nd Stone Details (3 cols) ---
+                        // Row 8: 2nd Stone Details
                         html += createBox("2nd Stn", product['2nd Stn'], "span-2");
                         html += createBox("2nd Stn Qty", product['2nd Stn qty'], "span-2");
                         html += createBox("2nd Stn Weight", product['2nd Stn weight'], "span-2");
 
-                        // --- Row 9: 3rd Stone Details (3 cols) ---
+                        // Row 9: 3rd Stone Details
                         html += createBox("3rd Stn", product['3rd Stn'], "span-2");
                         html += createBox("3rd Stn Qty", product['3rd Stn qty'], "span-2");
                         html += createBox("3rd Stn Weight", product['3rd Stn weight'], "span-2");
                         
-                        // --- Row 10: 4th Stone Details (3 cols) ---
+                        // Row 10: 4th Stone Details
                         html += createBox("4th Stn", product['4th Stn'], "span-2");
                         html += createBox("4th Stn Qty", product['4th Stn qty'], "span-2");
                         html += createBox("4th Stn Weight", product['4th Stn weight'], "span-2");
-
+                        
                         html += `</div>`; // End Grid
-
                         resultArea.innerHTML = html;
                     } else {
                         resultArea.innerHTML = `<p class="error">Product with ID "${code}" not found.</p>`;
