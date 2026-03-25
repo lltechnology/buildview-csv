@@ -76,22 +76,62 @@ export async function POST(request: NextRequest) {
             async start(controller) {
                 let processed = 0;
                 let inserted = 0;
-                let updated = 0;
                 let errorCount = 0;
+                let archivedCount = 0;
 
                 function sendProgress(status: string) {
-                    const event = JSON.stringify({ current: processed, total, inserted, updated, errors: errorCount, status });
+                    const event = JSON.stringify({ current: processed, total, inserted, archived: archivedCount, errors: errorCount, status });
                     controller.enqueue(encoder.encode(`data: ${event}\n\n`));
                 }
 
-                sendProgress('starting');
+                sendProgress('archiving');
 
-                // Process in batches
+                // Step 1: Archive existing products
+                try {
+                    const archiveResult = await sql`
+                        INSERT INTO products_archive (
+                            stock_no, description, as_is, code_18k, code_14k, code_10k, code_9k,
+                            silver_code, gold_weight,
+                            stn1_type, stn1_qty, stn1_weight,
+                            stn2_type, stn2_qty, stn2_weight,
+                            stn3_type, stn3_qty, stn3_weight,
+                            stn4_type, stn4_qty, stn4_weight,
+                            created_at, updated_at, archived_at
+                        )
+                        SELECT
+                            stock_no, description, as_is, code_18k, code_14k, code_10k, code_9k,
+                            silver_code, gold_weight,
+                            stn1_type, stn1_qty, stn1_weight,
+                            stn2_type, stn2_qty, stn2_weight,
+                            stn3_type, stn3_qty, stn3_weight,
+                            stn4_type, stn4_qty, stn4_weight,
+                            created_at, updated_at, NOW()
+                        FROM products
+                    `;
+                    archivedCount = archiveResult.length;
+                } catch (archiveErr) {
+                    console.error('Archive error:', archiveErr);
+                    // Continue even if archive fails (table might be empty)
+                }
+
+                sendProgress('clearing');
+
+                // Step 2: Clear the products table
+                try {
+                    await sql`TRUNCATE TABLE products RESTART IDENTITY`;
+                } catch (truncErr) {
+                    console.error('Truncate error:', truncErr);
+                    // If truncate fails, try delete
+                    await sql`DELETE FROM products`;
+                }
+
+                sendProgress('processing');
+
+                // Step 3: Insert new CSV data in batches
                 for (let i = 0; i < rows.length; i += BATCH_SIZE) {
                     const batch = rows.slice(i, i + BATCH_SIZE);
 
                     try {
-                        // Build batch upsert using unnest arrays
                         const stockNos = batch.map((r) => r.stockNo);
                         const descriptions = batch.map((r) => r.description);
                         const asIss = batch.map((r) => r.asIs);
@@ -176,13 +216,9 @@ export async function POST(request: NextRequest) {
                             stn4_qty = EXCLUDED.stn4_qty,
                             stn4_weight = EXCLUDED.stn4_weight,
                             updated_at = NOW()
-                          RETURNING (xmax = 0) AS is_insert
                         `;
 
-                        for (const row of results) {
-                            if (row.is_insert) inserted++;
-                            else updated++;
-                        }
+                        inserted += results.length;
                     } catch {
                         errorCount += batch.length;
                     }
@@ -196,7 +232,7 @@ export async function POST(request: NextRequest) {
                     current: total,
                     total,
                     inserted,
-                    updated,
+                    archived: archivedCount,
                     errors: errorCount,
                     status: 'complete',
                 });
